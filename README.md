@@ -20,12 +20,11 @@ Dependencies
 Example Playbook
 ----------------
 
-   ---
-   - hosts: 127.0.0.1
+	---
+	- hosts: 127.0.0.1
 
-   roles:
-     - ansible-go
-
+	roles:
+	  - ansible-go
 
 License
 -------
