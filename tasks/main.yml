@@ -1,0 +1,37 @@
+---
+# tasks file for ansible-go
+- name: download https://dl.google.com/go/go{{go_version}}.linux-amd64.tar.gz
+  get_url:
+    url: "https://dl.google.com/go/go{{go_version}}.linux-amd64.tar.gz"
+    dest: "/tmp/go{{go_version}}.linux-amd64.tar.gz"
+    mode: 0644
+
+- name: create the "/usr/local/go{{go_version}}" directory
+  file:
+    path: "/usr/local/go{{go_version}}"
+    state: directory
+    mode: 0755
+
+- name: untar the go archive
+  unarchive:
+    src: "/tmp/go{{go_version}}.linux-amd64.tar.gz" 
+    dest: "/usr/local/go{{go_version}}"
+    extra_opts: [--strip-components=1]
+    remote_src: yes
+
+- name: symlink the directory
+  file:
+    src: "/usr/local/go{{go_version}}"
+    dest: "/usr/local/go"
+    state: link
+    force: yes
+
+- name: use alternatives to update
+  alternatives:
+    name: "{{item}}"
+    path: "/usr/local/go/bin/{{item}}"
+    link: "/usr/local/bin/{{item}}"
+  with_items:
+    - go
+    - godoc
+    - gofmt
