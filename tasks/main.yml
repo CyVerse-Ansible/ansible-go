@@ -26,6 +26,11 @@
     state: link
     force: yes
 
+- name: download godoc for parity with v1.13
+  shell: go get golang.org/x/tools/cmd/godoc
+  environment:
+    GOPATH: /usr/local/go
+
 - name: use alternatives to update
   alternatives:
     name: "{{item}}"
