@@ -34,4 +34,3 @@
   with_items:
     - go
     - gofmt
-    - godoc
