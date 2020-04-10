@@ -1,4 +1,4 @@
 ---
 # defaults file for ansible-go
-# current version as of 4/9/2020
-go_version: "1.14.2"
+# current 1.13.x version as of 4/9/2020
+go_version: "1.13.10"
