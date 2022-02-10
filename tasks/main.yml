@@ -52,4 +52,4 @@
     with_items:
       - go
       - gofmt
-  when: dir_to_check.stat.isdir is not defined or dir_to_check.stat.isdir is false 
+  when: dir_to_check.stat.isdir is not defined or dir_to_check.stat.isdir == false 
