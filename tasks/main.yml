@@ -1,36 +1,55 @@
 ---
 # tasks file for ansible-go
-- name: download https://dl.google.com/go/go{{go_version}}.linux-amd64.tar.gz
-  get_url:
-    url: "https://dl.google.com/go/go{{go_version}}.linux-amd64.tar.gz"
-    dest: "/tmp/go{{go_version}}.linux-amd64.tar.gz"
-    mode: 0644
+- name: check if /usr/local/go is a directory instead of a symlink
+  stat:
+    path: "/usr/local/go"
+  register: dir_to_check
 
-- name: create the "/usr/local/go{{go_version}}" directory
-  file:
-    path: "/usr/local/go{{go_version}}"
-    state: directory
-    mode: 0755
+- name: check if the installed go version matches what is configured for this role
+  shell:
+    cmd: /usr/local/go/bin/go version | awk '{print $3}' | sed 's/go//g'
+  register: existing_go_version
+  when: dir_to_check.stat.isdir is defined and dir_to_check.stat.isdir
 
-- name: untar the go archive
-  unarchive:
-    src: "/tmp/go{{go_version}}.linux-amd64.tar.gz" 
-    dest: "/usr/local/go{{go_version}}"
-    extra_opts: [--strip-components=1]
-    remote_src: yes
+- name: fail because /usr/local/go is not managed by this role
+  fail:
+    msg: "The role failed to run because the installed go version is not managed by this role and is not the configured version.  Please move or delete /usr/local/go"
+  when: dir_to_check.stat.isdir is defined and dir_to_check.stat.isdir and existing_go_version.stdout != go_version
 
-- name: symlink the directory
-  file:
-    src: "/usr/local/go{{go_version}}"
-    dest: "/usr/local/go"
-    state: link
-    force: yes
+- name: install go with alternatives
+  block:
+  - name: download https://dl.google.com/go/go{{go_version}}.linux-amd64.tar.gz
+    get_url:
+      url: "https://dl.google.com/go/go{{go_version}}.linux-amd64.tar.gz"
+      dest: "/tmp/go{{go_version}}.linux-amd64.tar.gz"
+      mode: 0644
 
-- name: use alternatives to update
-  alternatives:
-    name: "{{item}}"
-    path: "/usr/local/go/bin/{{item}}"
-    link: "/usr/local/bin/{{item}}"
-  with_items:
-    - go
-    - gofmt
+  - name: create the "/usr/local/go{{go_version}}" directory
+    file:
+      path: "/usr/local/go{{go_version}}"
+      state: directory
+      mode: 0755
+
+  - name: untar the go archive
+    unarchive:
+      src: "/tmp/go{{go_version}}.linux-amd64.tar.gz" 
+      dest: "/usr/local/go{{go_version}}"
+      extra_opts: [--strip-components=1]
+      remote_src: yes
+
+  - name: symlink the directory
+    file:
+      src: "/usr/local/go{{go_version}}"
+      dest: "/usr/local/go"
+      state: link
+      force: yes
+
+  - name: use alternatives to update
+    alternatives:
+      name: "{{item}}"
+      path: "/usr/local/go/bin/{{item}}"
+      link: "/usr/local/bin/{{item}}"
+    with_items:
+      - go
+      - gofmt
+  when: dir_to_check.stat.isdir is not defined or dir_to_check.stat.isdir is false 
